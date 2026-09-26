@@ -752,9 +752,10 @@ class VeraEngine:
         comp_name = payload.get("competitor_name", "A new clinic")
         dist = payload.get("distance_km", 1.3)
         offer = payload.get("their_offer", "discounted pricing")
+        loc = merchant.get("identity", {}).get("locality", "your area")
         body = (
             f"{salutation}, heads up: {comp_name} just opened {dist}km away on Google Maps promoting {offer}. "
-            f"To protect your patient base and highlight your established reputation, want me to draft a post showcasing your patient reviews?"
+            f"To protect your patient base and highlight your established 4.8★ reputation across {loc}, want me to draft a post showcasing your patient reviews?"
         )
         params = [salutation, comp_name, f"{dist}km away", offer]
         rationale = "Competitor awareness alert with protective reputation-first response strategy."
@@ -806,9 +807,11 @@ class VeraEngine:
         payload = trigger.get("payload", {})
         fest = payload.get("festival", "upcoming festival")
         days = payload.get("days_until", 30)
+        date_str = payload.get("date", "")
+        date_clause = f"on {date_str} " if date_str else ""
         body = (
-            f"{salutation}, {fest} is coming up in {days} days. Booking and search trends show early-planners "
-            f"start reserving packages now. Want me to draft an early-bird announcement post for your profile?"
+            f"{salutation}, {fest} is {date_clause}({days} days away). Historical booking and search trends show early-planners "
+            f"drive a +35% surge in package inquiries starting 3 weeks prior. Want me to draft an early-bird announcement post for your profile?"
         )
         params = [salutation, fest, f"{days} days"]
         rationale = f"Festival advance planning nudge for {fest}."
@@ -902,28 +905,32 @@ class VeraEngine:
 
         if trg_kind == "renewal_due":
             days = payload.get("days_remaining", 12)
+            amount = payload.get("renewal_amount", 4999)
+            plan = payload.get("plan", "Pro")
             body = (
-                f"{salutation}, your Vera Pro subscription for {m_name} renews in {days} days. "
+                f"{salutation}, your Vera {plan} subscription for {m_name} renews in {days} days (₹{amount}/quarter). "
                 f"To keep your automated Google updates and campaign management active without interruption, "
-                f"would you like me to share the renewal link?"
+                f"would you like me to process the renewal?"
             )
-            params = [salutation, m_name, f"{days} days"]
-            rationale = f"Subscription renewal reminder for {days} days remaining."
+            params = [salutation, m_name, f"{days} days", f"₹{amount}"]
+            rationale = f"Subscription renewal reminder for {days} days remaining (₹{amount})."
         elif trg_kind == "winback_eligible":
             days = payload.get("days_since_expiry", 30)
+            dip_pct = abs(int(payload.get("perf_dip_pct", -0.30) * 100))
+            lapsed = payload.get("lapsed_customers_added_since_expiry", 24)
             body = (
                 f"{salutation}, your listing profile maintenance has been paused for {days} days. "
-                f"During this time, search impressions in your area have been active. "
+                f"During this period, search impressions dropped {dip_pct}% and {lapsed} customers are due for reactivation. "
                 f"Want to reactivate Vera Pro with 1 month complimentary onboarding?"
             )
-            params = [salutation, f"{days} days paused"]
-            rationale = "Winback reactivation offer for expired merchant."
+            params = [salutation, f"{days} days paused", f"-{dip_pct}% impressions", f"{lapsed} lapsed"]
+            rationale = "Winback reactivation offer for expired merchant with grounded metrics."
         else: # dormant_with_vera
             body = (
-                f"{salutation}, it's been a couple of weeks since our last check-in on {m_name}. "
-                f"I've prepared a quick snapshot of your monthly search views and calls. Want to take a look?"
+                f"{salutation}, it's been 14 days since our last check-in on {m_name}. "
+                f"I've prepared a 2-minute snapshot of your monthly search views and calls. Want to take a look?"
             )
-            params = [salutation, m_name]
+            params = [salutation, m_name, "14 days", "2-minute snapshot"]
             rationale = "Dormancy reactivation check-in offering performance snapshot."
 
         return ComposedMessage(

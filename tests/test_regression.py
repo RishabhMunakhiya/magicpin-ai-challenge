@@ -112,3 +112,103 @@ def test_expired_trigger_ignored():
     })
     assert resp.status_code == 200
     assert len(resp.json()["actions"]) == 0
+
+
+def test_festival_upcoming_grounded_specificity():
+    client.post("/v1/context", json={
+        "scope": "category",
+        "context_id": "salons",
+        "version": 1,
+        "payload": {"slug": "salons"},
+        "delivered_at": "2026-04-26T10:00:00Z",
+    })
+    client.post("/v1/context", json={
+        "scope": "merchant",
+        "context_id": "m_003",
+        "version": 1,
+        "payload": {
+            "merchant_id": "m_003",
+            "category_slug": "salons",
+            "identity": {"name": "Studio 11", "owner_first_name": "Lakshmi"},
+        },
+        "delivered_at": "2026-04-26T10:00:00Z",
+    })
+    client.post("/v1/context", json={
+        "scope": "trigger",
+        "context_id": "trg_006",
+        "version": 1,
+        "payload": {
+            "id": "trg_006",
+            "scope": "merchant",
+            "kind": "festival_upcoming",
+            "merchant_id": "m_003",
+            "payload": {"festival": "Diwali", "date": "2026-10-31", "days_until": 188},
+            "urgency": 1,
+            "suppression_key": "festival:diwali:2026:m_003",
+            "expires_at": "2026-11-02T00:00:00Z",
+        },
+        "delivered_at": "2026-04-26T10:00:00Z",
+    })
+
+    resp = client.post("/v1/tick", json={
+        "now": "2026-04-26T10:00:00Z",
+        "available_triggers": ["trg_006"]
+    })
+    assert resp.status_code == 200
+    actions = resp.json()["actions"]
+    assert len(actions) == 1
+    body = actions[0]["body"]
+    assert "Diwali" in body
+    assert "188 days" in body
+    assert "2026-10-31" in body or "35%" in body
+    assert "http" not in body.lower()
+    assert actions[0]["send_as"] == "vera"
+
+
+def test_lifecycle_renewal_and_winback_grounded_specificity():
+    client.post("/v1/context", json={
+        "scope": "category",
+        "context_id": "dentists",
+        "version": 1,
+        "payload": {"slug": "dentists"},
+        "delivered_at": "2026-04-26T10:00:00Z",
+    })
+    client.post("/v1/context", json={
+        "scope": "merchant",
+        "context_id": "m_002",
+        "version": 1,
+        "payload": {
+            "merchant_id": "m_002",
+            "category_slug": "dentists",
+            "identity": {"name": "Bharat Dental", "owner_first_name": "Bharat"},
+        },
+        "delivered_at": "2026-04-26T10:00:00Z",
+    })
+    client.post("/v1/context", json={
+        "scope": "trigger",
+        "context_id": "trg_005",
+        "version": 1,
+        "payload": {
+            "id": "trg_005",
+            "scope": "merchant",
+            "kind": "renewal_due",
+            "merchant_id": "m_002",
+            "payload": {"days_remaining": 12, "plan": "Pro", "renewal_amount": 4999},
+            "urgency": 4,
+            "suppression_key": "renewal:m_002:2026-Q2",
+            "expires_at": "2026-05-08T00:00:00Z",
+        },
+        "delivered_at": "2026-04-26T10:00:00Z",
+    })
+
+    resp = client.post("/v1/tick", json={
+        "now": "2026-04-26T10:00:00Z",
+        "available_triggers": ["trg_005"]
+    })
+    assert resp.status_code == 200
+    actions = resp.json()["actions"]
+    assert len(actions) == 1
+    body = actions[0]["body"]
+    assert "12 days" in body
+    assert "4999" in body or "Pro" in body
+
