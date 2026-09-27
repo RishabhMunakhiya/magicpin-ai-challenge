@@ -43,6 +43,22 @@ app.add_middleware(
 )
 
 
+@app.get("/", tags=["Root"])
+async def root():
+    return {
+        "bot": "Magicpin Vera AI Bot",
+        "status": "online",
+        "endpoints": {
+            "healthz": "/v1/healthz",
+            "metadata": "/v1/metadata",
+            "context": "/v1/context",
+            "tick": "/v1/tick",
+            "reply": "/v1/reply",
+            "docs": "/docs",
+        },
+    }
+
+
 # -----------------------------------------------------------------------------
 # 1. GET /v1/healthz — Liveness Probe
 # -----------------------------------------------------------------------------
