@@ -24,7 +24,7 @@ import os
 import sys
 
 # Your bot's URL (where your bot is running)
-BOT_URL = os.getenv("BOT_URL", "http://localhost:8080")
+BOT_URL = os.getenv("BOT_URL", "https://magicpin-ai-challenge-09la.onrender.com")
 
 # Choose your LLM provider: "openai", "anthropic", "gemini", "deepseek", "groq", "ollama", "openrouter", "mock"
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "mock")
@@ -465,13 +465,13 @@ class BotClient:
             return None, str(e), (time.time() - start) * 1000
 
     def healthz(self):
-        return self._request("GET", "/v1/healthz", 5)
+        return self._request("GET", "/v1/healthz", 30)
 
     def metadata(self):
-        return self._request("GET", "/v1/metadata", 5)
+        return self._request("GET", "/v1/metadata", 30)
 
     def push_context(self, scope, cid, version, payload):
-        return self._request("POST", "/v1/context", 10, {
+        return self._request("POST", "/v1/context", 30, {
             "scope": scope, "context_id": cid, "version": version,
             "payload": payload, "delivered_at": datetime.now(timezone.utc).isoformat()
         })
