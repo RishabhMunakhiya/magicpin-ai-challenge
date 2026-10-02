@@ -39,7 +39,7 @@ LLM_MODEL = os.getenv("LLM_MODEL", "")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 
 # Which test to run by default
-TEST_SCENARIO = os.getenv("TEST_SCENARIO", "all")
+TEST_SCENARIO = os.getenv("TEST_SCENARIO", "full_evaluation")
 
 # =============================================================================
 # ██████  END OF CONFIGURATION - DON'T EDIT BELOW THIS LINE ██████
